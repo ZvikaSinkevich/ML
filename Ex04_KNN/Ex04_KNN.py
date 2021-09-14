@@ -17,6 +17,7 @@ def calc_nearest_neighbours(train_ds, test_ds, k):
 
     # calc distances between instances
     for index, sample in enumerate(test_ds):
+
         # measure distances relative ONLY to the train dataset
         distances = calc_distance(train_ds, sample)
 
@@ -27,9 +28,17 @@ def calc_nearest_neighbours(train_ds, test_ds, k):
     return nearest_neighbours_indexes.astype(int)
 
 
-def calc_predict(nearest_neighbours_indexes, neighbours_labels):
-    p_mode, _ = mode(neighbours_labels[nearest_neighbours_indexes], axis=1)
-    return np.squeeze(p_mode)
+def calc_predict(nearest_neighbours_indexes, neighbours_labels, reg_flag=False, reg_func=np.mean):
+
+    # Predict for Regression Problem
+    if reg_flag:
+        predict = reg_func(neighbours_labels[nearest_neighbours_indexes], axis=1)
+
+    # Predict for Classification Problem
+    else:
+        predict, _ = mode(neighbours_labels[nearest_neighbours_indexes], axis=1)
+
+    return np.squeeze(predict)
 
 
 def calc_accuracy(true_labels, predict):
@@ -43,6 +52,8 @@ if __name__ == '__main__':
     n_neighbors = 7
     random_state = 22
     test_size = 0.3
+    is_regression = False
+    regression_func = np.median
 
     # Preprocessing
     features, labels = load_iris(return_X_y=True)
@@ -54,5 +65,5 @@ if __name__ == '__main__':
 
     # Main Algorithm
     k_nearest_indexes = calc_nearest_neighbours(features_train, features_test, n_neighbors)
-    predictions = calc_predict(k_nearest_indexes, labels_train)
+    predictions = calc_predict(k_nearest_indexes, labels_train, reg_flag=is_regression, reg_func=regression_func)
     accuracy = calc_accuracy(labels_test, predictions)
